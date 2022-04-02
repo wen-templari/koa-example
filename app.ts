@@ -8,10 +8,10 @@ const app = new Koa()
 const router = new Router()
 
 router.post("/login", async ctx => {
-  let body = ctx.request.body
-  let id = body.id
-  let password = body.password
-  const user = await prisma.user.findUnique({ where: { id: id } })
+  const body = ctx.request.body
+  const id = body.id
+  const password = body.password
+  const user = await prisma.user.findUnique({ where: { id } })
   if (user?.password === password) {
     ctx.body = {
       status: "success",
@@ -44,6 +44,6 @@ app.use(async (ctx, next) => {
 // response
 app.use(router.routes())
 
-export { app }
+export { app, router }
 
 app.listen(3001)
