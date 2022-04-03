@@ -2,7 +2,7 @@
 
 ## how to start
 1. install dependencies
-   + [nodejs](nodejs.org)
+   + [nodejs](https://nodejs.org)
 2. install node modules
    ```sh
    npm install
@@ -26,11 +26,11 @@
    ```
 
 ## resources
-+ [typescript](www.typescriptlang.org)
-+ [koa](koajs.com/)
-+ [koa-router](github.com/ZijianHe/koa-router)
-+ [prisma](www.prisma.io/)
-+ [eslint](eslint.org/)
-+ [mocha](mochajs.org/)
-+ [should](shouldjs.github.io/)
-+ [supertest](supertest.github.io/)
++ [typescript](https://www.typescriptlang.org)
++ [koa](https://koajs.com/)
++ [koa-router](https://github.com/ZijianHe/koa-router)
++ [prisma](https://www.prisma.io/)
++ [eslint](https://eslint.org/)
++ [mocha](https://mochajs.org/)
++ [should](https://shouldjs.github.io/)
++ [supertest](https://github.com/visionmedia/supertest)
