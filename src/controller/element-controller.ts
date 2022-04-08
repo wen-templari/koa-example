@@ -8,12 +8,8 @@ elementRouter.post("/login", async ctx => {
   const body = ctx.request.body
   const id: string = body.id
   const password: string = body.password
-  try {
-    const data = await new ElementService().login(id, password)
-    ctx.body = new ReturnObject().success(data)
-  } catch (error) {
-    ctx.body = new ReturnObject().fail(1, "login fail")
-  }
+  const data = await ElementService.login(id, password)
+  ctx.body = ReturnObject.success(data)
 })
 
 export { elementRouter }

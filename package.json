@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc --outDir dist",
-    "start": "yarn build && node dist/app.js",
-    "test": "yarn build && mocha ./dist/test/test.js"
+    "start": "npm run build && node dist/app.js",
+    "test": "npm run build && mocha ./dist/test/test.js"
   },
   "keywords": [],
   "author": "",
@@ -17,7 +17,9 @@
     "@types/koa-router": "^7.4.4",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
+    "koa-params-validator": "^0.0.5",
     "koa-router": "^10.1.1",
+    "log4js": "^6.4.4",
     "prisma": "^3.11.1"
   },
   "devDependencies": {

@@ -5,7 +5,7 @@ import ReturnObject from "../src/util/return-object"
 
 describe("ReturnObject", () => {
   it("should return a success object", () => {
-    const res = new ReturnObject().success()
+    const res = ReturnObject.success()
     should(res).have.properties("code")
     should(res.code).be.equal(0)
     should(res).have.properties("message")
