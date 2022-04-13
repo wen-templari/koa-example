@@ -1,6 +1,7 @@
 interface LoginDTO {
   token: string
-  name: string | null
+  alias: string | null
+  avatar: string | null
 }
 
 export { LoginDTO }

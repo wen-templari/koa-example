@@ -18,6 +18,7 @@ class ReturnObject {
     // }
     // return this
   }
+
   static fail(code: number, message: string): ReturnObject {
     return new ReturnObject(code, null, message)
     // this.code = code

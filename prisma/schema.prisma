@@ -7,49 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model element {
-  element_id                      String      @id @db.Char(10)
-  alias                           String?     @db.VarChar(50)
-  password                        String?     @db.VarChar(50)
-  name                            String?     @db.VarChar(20)
-  section                         String?     @db.VarChar(20)
-  profile                         String?     @db.VarChar(1000)
-  phone                           String?     @db.VarChar(11)
-  qq                              String?     @db.VarChar(20)
-  avatar                          String?     @db.VarChar(255)
-  role                            Int         @default(1) @db.TinyInt
-  status                          Int         @default(0) @db.TinyInt
-  created_by                      String?     @db.Char(10)
-  gmt_create                      DateTime    @db.DateTime(0)
-  gmt_modified                    DateTime    @db.DateTime(0)
-  gmt_expire                      DateTime?   @db.Date
-  event_elementToevent_closed_by  event[]     @relation("elementToevent_closed_by")
-  event_elementToevent_element_id event[]     @relation("elementToevent_element_id")
-  event_log                       event_log[]
-}
-
 model event {
-  user_id                           String      @db.VarChar(40)
-  event_id                          String      @id @db.VarChar(40)
-  model                             String?     @db.VarChar(40)
-  phone                             String      @db.VarChar(11)
-  qq                                String?     @db.VarChar(20)
-  contact_preference                Int         @default(0) @db.TinyInt
-  event_description                 String?     @db.VarChar(500)
-  repair_description                String?     @db.VarChar(1000)
-  status                            Int         @default(0) @db.TinyInt
-  element_id                        String?     @db.Char(10)
-  closed_by                         String?     @db.Char(10)
-  gmt_create                        DateTime    @db.DateTime(0)
-  gmt_modified                      DateTime    @db.DateTime(0)
-  element_elementToevent_closed_by  element?    @relation("elementToevent_closed_by", fields: [closed_by], references: [element_id], onDelete: Restrict, onUpdate: Restrict, map: "event_ibfk_1")
-  element_elementToevent_element_id element?    @relation("elementToevent_element_id", fields: [element_id], references: [element_id], onDelete: Restrict, onUpdate: Restrict, map: "fk_Event_repairElements_1")
-  user                              user        @relation(fields: [user_id], references: [user_id], onUpdate: Restrict, map: "event_ibfk_2")
-  event_log                         event_log[]
+  client_id                      String       @db.VarChar(40)
+  event_id                       String       @id @db.VarChar(40)
+  model                          String?      @db.VarChar(40)
+  phone                          String       @db.VarChar(11)
+  qq                             String?      @db.VarChar(20)
+  contact_preference             Int          @default(0) @db.TinyInt
+  event_description              String?      @db.VarChar(500)
+  repair_description             String?      @db.VarChar(1000)
+  status                         Int          @default(0) @db.TinyInt
+  member_id                      String?      @db.Char(10)
+  closed_by                      String?      @db.Char(10)
+  gmt_create                     DateTime     @db.DateTime(0)
+  gmt_modified                   DateTime     @db.DateTime(0)
+  client                         client       @relation(fields: [client_id], references: [client_id], onUpdate: Restrict, map: "event_ibfk_2")
+  member_event_closed_byTomember member?      @relation("event_closed_byTomember", fields: [closed_by], references: [member_id], onDelete: Restrict, onUpdate: Restrict, map: "event_ibfk_1")
+  member_event_member_idTomember member?      @relation("event_member_idTomember", fields: [member_id], references: [member_id], onDelete: Restrict, onUpdate: Restrict, map: "fk_Event_repairElements_1")
+  event_status                   event_status @relation(fields: [status], references: [event_status_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_event_status_1")
+  event_log                      event_log[]
 
   @@index([closed_by], map: "fk_Event_Admin_2")
-  @@index([user_id], map: "fk_Event_User_1")
-  @@index([element_id], map: "fk_Event_repairElements_1")
+  @@index([client_id], map: "fk_Event_User_1")
+  @@index([member_id], map: "fk_Event_repairElements_1")
+  @@index([status], map: "fk_event_event_status_1")
 }
 
 model event_log {
@@ -58,25 +39,69 @@ model event_log {
   action       String   @db.VarChar(255)
   description  String?  @db.VarChar(255)
   gmt_create   DateTime @db.DateTime(0)
-  element_id   String?  @db.Char(10)
-  element      element? @relation(fields: [element_id], references: [element_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_log_element_1")
+  member_id    String?  @db.Char(10)
   event        event    @relation(fields: [event_id], references: [event_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_log_event_1")
+  member       member?  @relation(fields: [member_id], references: [member_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_event_log_element_1")
 
-  @@index([element_id], map: "fk_event_log_element_1")
+  @@index([member_id], map: "fk_event_log_element_1")
   @@index([event_id], map: "fk_event_log_event_1")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
 model setting {
-  setting String @db.VarChar(10000)
+  setting String? @db.VarChar(10000)
 
   @@ignore
 }
 
-model user {
-  user_id      String   @id @db.VarChar(40)
+model client {
+  client_id    String   @id @db.VarChar(40)
   openid       String?  @db.Char(28)
   gmt_create   DateTime @db.DateTime(0)
   gmt_modified DateTime @db.DateTime(0)
   event        event[]
+}
+
+model event_status {
+  event_status_id Int     @id @db.TinyInt
+  status          String? @db.VarChar(255)
+  event           event[]
+}
+
+model member {
+  member_id                     String        @id @db.Char(10)
+  alias                         String?       @db.VarChar(50)
+  password                      String?       @db.VarChar(50)
+  name                          String?       @db.VarChar(20)
+  section                       String?       @db.VarChar(20)
+  profile                       String?       @db.VarChar(1000)
+  phone                         String?       @db.VarChar(11)
+  qq                            String?       @db.VarChar(20)
+  avatar                        String?       @db.VarChar(255)
+  role                          Int           @default(1) @db.TinyInt
+  status                        Int           @default(0) @db.TinyInt
+  created_by                    String?       @db.Char(10)
+  gmt_create                    DateTime      @db.DateTime(0)
+  gmt_modified                  DateTime      @db.DateTime(0)
+  gmt_expire                    DateTime?     @db.Date
+  member_role                   member_role   @relation(fields: [role], references: [member_role_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_member_member_role_1")
+  member_status                 member_status @relation(fields: [status], references: [member_status_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_member_member_status_1")
+  event_event_closed_byTomember event[]       @relation("event_closed_byTomember")
+  event_event_member_idTomember event[]       @relation("event_member_idTomember")
+  event_log                     event_log[]
+
+  @@index([role], map: "fk_member_member_role_1")
+  @@index([status], map: "fk_member_member_status_1")
+}
+
+model member_role {
+  member_role_id Int      @id @db.TinyInt
+  role           String   @db.VarChar(255)
+  member         member[]
+}
+
+model member_status {
+  member_status_id Int      @id @db.TinyInt
+  role             String   @db.VarChar(255)
+  member           member[]
 }
