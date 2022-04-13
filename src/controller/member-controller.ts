@@ -9,6 +9,10 @@ class MemberController {
   //   ctx.body = await MemberService.login(body.id, body.password)
   // }
 
+  async getToken(ctx: Ctx) {
+    ctx.body = "TOKEN"
+  }
+
   async get(ctx: Ctx) {
     const prisma = new PrismaClient()
     const member = await prisma.member.findUnique({

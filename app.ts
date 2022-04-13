@@ -2,7 +2,7 @@ import Koa from "koa"
 import bodyParser from "koa-bodyparser"
 import { PrismaClient } from "@prisma/client"
 import router from "./src/router"
-import ServiceError from "./src/util/error"
+import { ServiceError } from "./src/util/error"
 import logger from "./src/util/logger"
 
 const prisma = new PrismaClient()
@@ -43,4 +43,8 @@ app.use(router.routes())
 
 export { app, prisma }
 
-app.listen(3001)
+const Port = 3001
+
+app.listen(Port)
+
+console.log("listening at:",Port)

@@ -1,13 +1,12 @@
 import { PrismaClient } from "@prisma/client"
 import { LoginDTO } from "../model/DTO"
 import { exclude } from "../util/dbUtils"
-import ServiceError from "../util/error"
+import { ServiceError } from "../util/error"
 import createToken from "../util/token"
 
 class MemberService {
   private readonly prisma = new PrismaClient()
   private readonly MemberRepo = this.prisma["member"]
-  private readonly RoleMap = ["notActivated", "member", "admin"] //TODO extract or use number
 
   // async login(id: string, password: string): Promise<LoginDTO> {
   //   const findById = {

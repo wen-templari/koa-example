@@ -1,40 +1,47 @@
 import { ObjectSchema } from "joi"
-import ServiceError from "./error"
+import { ServiceErrorDetail, ServiceError, HttpStatusCode } from "./error"
 import { Next, ParameterizedContext as Ctx } from "koa"
 
-const validate = (schema: ObjectSchema, data: unknown) => {
-  const { error } = schema.validate(data)
-  return error
-}
-
-const validateMiddleware = (schema: ObjectSchema, pos: string) => {
-  return async (ctx: Ctx, next: Next): Promise<void> => {
-    let data, error
-    if (pos == "body") {
-      error = validate(schema, ctx.request.body)
-    } else {
-      error = validate(schema, ctx.params)
-    }
-    if (error != null) {
-      const serviceError = new ServiceError()
-      error.details.forEach(detail => {
-        if (detail.context && detail.context.key && detail.context.label) {
-          serviceError.addErrors([
-            {
-              resource: ctx.path,
-              field: detail.context.label,
-              code: detail.type,
-            },
-          ])
-        }
-      })
-      serviceError.setMessage(error.message)
-      console.log(error.details)
-      throw serviceError
-    }
-    ctx.request.body = data
-    await next()
+class Location {
+  getLocation: (ctx: Ctx) => unknown
+  constructor(getLocation: (ctx: Ctx) => unknown) {
+    this.getLocation = getLocation
+  }
+  static Body() {
+    return new Location((ctx: Ctx) => ctx.request.body)
+  }
+  static Params() {
+    return new Location((ctx: Ctx) => ctx.params)
   }
 }
 
-export { validate, validateMiddleware }
+const validate = (schema: ObjectSchema, data: unknown, resource: string) => {
+  const { error } = schema.validate(data)
+  if (error == null) {
+    return
+  }
+  const serviceError = new ServiceError()
+  const errorDetails: ServiceErrorDetail[] = []
+  error.details.forEach(detail => {
+    if (detail.context && detail.context.key && detail.context.label) {
+      errorDetails.push({
+        resource: resource,
+        field: detail.context.label,
+        code: detail.type,
+      })
+    }
+  })
+  serviceError.addErrors(errorDetails)
+  serviceError.setMessage(error.message)
+  serviceError.setHttpStatusCode(HttpStatusCode.Unprocessable_Entity)
+  throw serviceError
+}
+
+const validateMiddleware = (schema: ObjectSchema, location: Location) => {
+  return async (ctx: Ctx, next: Next): Promise<void> => {
+    validate(schema, location.getLocation(ctx), ctx.path)
+    next()
+  }
+}
+
+export { Location, validate, validateMiddleware }
