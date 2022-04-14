@@ -1,55 +1,72 @@
-import { PrismaClient } from "@prisma/client"
-import { LoginDTO } from "../model/DTO"
+import { member, member_role, member_status, PrismaClient } from "@prisma/client"
 import { exclude } from "../util/dbUtils"
-import { ServiceError } from "../util/error"
-import createToken from "../util/token"
+import { HttpStatusCode, ServiceError } from "../util/error"
 
 class MemberService {
   private readonly prisma = new PrismaClient()
   private readonly MemberRepo = this.prisma["member"]
 
-  // async login(id: string, password: string): Promise<LoginDTO> {
-  //   const findById = {
-  //     member_id: id,
-  //   }
-  //   const member = await this.MemberRepo.findUnique({ where: { member_id: id } })
-  //   if (member == null) {
-  //     // throw new ServiceError(1, "id not found")
-  //   }
-  //   if (member.password !== password) {
-  //     throw new ServiceError(1, "wrong password")
-  //   }
-  //   const LoginDTO = {
-  //     token: createToken(14, {
-  //       id: id,
-  //       role: this.RoleMap[member.role],
-  //     }),
-  //     alias: member.alias,
-  //     avatar: member.avatar,
-  //   }
-  //   // update last login date
-  //   await this.MemberRepo.update({
-  //     where: findById,
-  //     data: {
-  //       gmt_modified: new Date(),
-  //     },
-  //   })
-  //   return LoginDTO
-  // }
+  setRoleAndStatus(
+    member: member & {
+      member_role: member_role
+      member_status: member_status
+    }
+  ) {
+    Object.assign(member, {
+      role: member.member_role.role,
+      status: member.member_status.role,
+    })
+    exclude(member, "member_role", "member_status")
+    return member
+  }
 
-  // async get(id: string) {
-  //   const member = await this.MemberRepo.findUnique({ where: { member_id: id } })
-  //   if (member == null) {
-  //     throw new ServiceError(1, "id not found")
-  //   }
-  //   // TODO whether to map role?
-  //   return exclude(member, "password")
-  // }
+  setPrivate(member: member) {
+    exclude(member, "password")
+    return member
+  }
 
-  // async getAll() {
-  //   const members = await this.MemberRepo.findMany()
-  //   members.forEach(e => exclude(e, "password"))
-  //   return members
-  // }
+  async getMember(member_id: string) {
+    const member = await this.MemberRepo.findUnique({
+      where: { member_id },
+      include: {
+        member_role: true,
+        member_status: true,
+      },
+    })
+    // member not found
+    if (!member) {
+      return member
+    }
+    this.setRoleAndStatus(member)
+    return member
+  }
+
+  async getPublicMember(member_id: string) {
+    const member = await this.getMember(member_id)
+    return member ? this.setPrivate(member) : member
+  }
+
+  async getPublicMembers(offset: number, limit: number) {
+    const members = await this.MemberRepo.findMany({
+      include: {
+        member_role: true,
+        member_status: true,
+      },
+      skip: offset,
+      take: limit,
+    })
+    members.forEach(member => {
+      this.setRoleAndStatus(member)
+      this.setPrivate(member)
+    })
+    return members
+  }
+
+  async createMember(member: member) {
+    const oldMember = await this.getMember(member.member_id)
+    if (oldMember) throw new ServiceError("Member already exists").setHttpStatusCode(HttpStatusCode.Conflict)
+    const newMember = await this.MemberRepo.create({ data: member })
+    return newMember
+  }
 }
 export default new MemberService()

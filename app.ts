@@ -2,26 +2,12 @@ import Koa from "koa"
 import bodyParser from "koa-bodyparser"
 import { PrismaClient } from "@prisma/client"
 import router from "./src/router"
-import { ServiceError } from "./src/util/error"
-import logger from "./src/util/logger"
+import { errorHandler } from "./src/util/error"
 
 const prisma = new PrismaClient()
 const app = new Koa()
 
-app.use(async (ctx, next) => {
-  // service error 处理
-  try {
-    await next()
-  } catch (error) {
-    if (error instanceof ServiceError) {
-      ctx.status = error.httpStatusCode
-      ctx.body = error.getErrorResponse()
-    } else {
-      ctx.status = 500
-      logger.error(error)
-    }
-  }
-})
+app.use(errorHandler())
 
 app.use(bodyParser())
 
@@ -47,4 +33,4 @@ const Port = 3001
 
 app.listen(Port)
 
-console.log("listening at:",Port)
+console.log("listening at:", Port)

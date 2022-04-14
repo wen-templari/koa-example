@@ -13,6 +13,9 @@ class Location {
   static Params() {
     return new Location((ctx: Ctx) => ctx.params)
   }
+  static Query() {
+    return new Location((ctx: Ctx) => ctx.query)
+  }
 }
 
 const validate = (schema: ObjectSchema, data: unknown, resource: string) => {
@@ -37,11 +40,11 @@ const validate = (schema: ObjectSchema, data: unknown, resource: string) => {
   throw serviceError
 }
 
-const validateMiddleware = (schema: ObjectSchema, location: Location) => {
+const validator = (schema: ObjectSchema, location: Location) => {
   return async (ctx: Ctx, next: Next): Promise<void> => {
     validate(schema, location.getLocation(ctx), ctx.path)
-    next()
+    await next()
   }
 }
 
-export { Location, validate, validateMiddleware }
+export { Location, validate, validator }

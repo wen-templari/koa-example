@@ -1,8 +1,8 @@
-import elementRouter from "./member-router"
 import Router from "koa-router"
+import memberRouter from "./member-router"
 
 const router = new Router()
 
-router.use("/members", elementRouter.routes())
+router.use(memberRouter.routes())
 
 export default router

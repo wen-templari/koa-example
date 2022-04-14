@@ -1,9 +1,9 @@
-/*
-  resource+type+serial
-  1(element)01(inconsistent)00(serial)
-*/
+import { Next, ParameterizedContext as Ctx } from "koa"
+import logger from "./logger"
+
 enum HttpStatusCode {
   OK = 200,
+  Created = 201,
   BadRequest = 400,
   Unauthorized = 401,
   Forbidden = 403,
@@ -49,4 +49,27 @@ class ServiceError extends Error {
   }
 }
 
-export { HttpStatusCode, ServiceErrorDetail, ServiceError }
+const errorHandler = () => {
+  return async (ctx: Ctx, next: Next) => {
+    try {
+      await next()
+    } catch (error) {
+      if (error instanceof ServiceError) {
+        ctx.status = error.httpStatusCode
+        ctx.body = error.getErrorResponse()
+      } else if (error instanceof SyntaxError) {
+        if (error.message.indexOf("JSON")) {
+          ctx.status = HttpStatusCode.BadRequest
+          ctx.body = {
+            message: "Body should be a JSON object",
+          }
+        }
+      } else {
+        ctx.status = HttpStatusCode.InternalServerError
+        logger.error(error)
+      }
+    }
+  }
+}
+
+export { HttpStatusCode, ServiceErrorDetail, ServiceError, errorHandler }
