@@ -1,71 +1,27 @@
-import { member, member_role, member_status, PrismaClient } from "@prisma/client"
-import { exclude } from "../util/dbUtils"
+import { member, PrismaClient } from "@prisma/client"
 import { HttpStatusCode, ServiceError } from "../util/error"
+import Members from "../client/member-client"
 
 class MemberService {
   private readonly prisma = new PrismaClient()
-  private readonly MemberRepo = this.prisma["member"]
-
-  setRoleAndStatus(
-    member: member & {
-      member_role: member_role
-      member_status: member_status
-    }
-  ) {
-    Object.assign(member, {
-      role: member.member_role.role,
-      status: member.member_status.role,
-    })
-    exclude(member, "member_role", "member_status")
-    return member
-  }
-
-  setPrivate(member: member) {
-    exclude(member, "password")
-    return member
-  }
+  private readonly members = Members(this.prisma.member)
 
   async getMember(member_id: string) {
-    const member = await this.MemberRepo.findUnique({
-      where: { member_id },
-      include: {
-        member_role: true,
-        member_status: true,
-      },
-    })
-    // member not found
-    if (!member) {
-      return member
-    }
-    this.setRoleAndStatus(member)
-    return member
+    return await this.members.getMemberById(member_id)
   }
 
   async getPublicMember(member_id: string) {
-    const member = await this.getMember(member_id)
-    return member ? this.setPrivate(member) : member
+    return await this.members.getPublicMemberById(member_id)
   }
 
   async getPublicMembers(offset: number, limit: number) {
-    const members = await this.MemberRepo.findMany({
-      include: {
-        member_role: true,
-        member_status: true,
-      },
-      skip: offset,
-      take: limit,
-    })
-    members.forEach(member => {
-      this.setRoleAndStatus(member)
-      this.setPrivate(member)
-    })
-    return members
+    return await this.members.getPublicMembers(offset, limit)
   }
 
   async createMember(member: member) {
     const oldMember = await this.getMember(member.member_id)
     if (oldMember) throw new ServiceError("Member already exists").setHttpStatusCode(HttpStatusCode.Conflict)
-    const newMember = await this.MemberRepo.create({ data: member })
+    const newMember = await this.members.create({ data: member })
     return newMember
   }
 }
