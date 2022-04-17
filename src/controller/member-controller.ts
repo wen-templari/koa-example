@@ -7,24 +7,6 @@ class MemberController {
     ctx.body = "TOKEN"
   }
   async createMember(ctx: Ctx) {
-    const body = ctx.request.body
-    await MemberService.createMember({
-      member_id: ctx.params.member_id,
-      section: body.section,
-      name: body.name,
-      alias: body.alias,
-      password: body.password,
-      profile: null,
-      phone: body.phone,
-      qq: body.avatar,
-      avatar: body.avatar,
-      role: 0,
-      status: 0,
-      created_by: null,
-      gmt_expire: null,
-      gmt_create: new Date(),
-      gmt_modified: new Date(),
-    })
     ctx.status = HttpStatusCode.Created
   }
 

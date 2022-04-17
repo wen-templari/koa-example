@@ -1,7 +1,7 @@
 import Joi from "joi"
 import Router from "koa-router"
 import memberController from "../controller/member-controller"
-import { MemberSchema } from "../model/member"
+import { MemberSchema } from "../util/schemas"
 import { pagingMiddleware } from "../util/dbUtils"
 import { Location, validator } from "../util/validate"
 

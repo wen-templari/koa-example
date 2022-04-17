@@ -1,18 +1,25 @@
-import { member, member_role, member_status, PrismaClient } from "@prisma/client"
+import { member, member_role_relation, PrismaClient, role } from "@prisma/client"
 import { exclude } from "../util/dbUtils"
 
 export default function Members(prisma: PrismaClient["member"]) {
-  const setRoleAndStatus = (
+  const includeRole = {
+    member_role_relation: {
+      include: {
+        role: true,
+      },
+    },
+  }
+  const setRole = (
     member: member & {
-      member_role: member_role
-      member_status: member_status
+      member_role_relation: (member_role_relation & {
+        role: role
+      })[]
     }
   ) => {
     Object.assign(member, {
-      role: member.member_role.role,
-      status: member.member_status.role,
+      role: member.member_role_relation[0].role.role,
     })
-    exclude(member, "member_role", "member_status")
+    exclude(member, "member_role_relation")
     return member
   }
 
@@ -24,35 +31,29 @@ export default function Members(prisma: PrismaClient["member"]) {
   const getMemberById = async (member_id: string) => {
     const member = await prisma.findUnique({
       where: { member_id },
-      include: {
-        member_role: true,
-        member_status: true,
-      },
+      include: includeRole,
     })
     // member not found
     if (!member) {
       return member
     }
-    setRoleAndStatus(member)
+    setRole(member)
     return member
   }
 
   const getPublicMemberById = async (member_id: string) => {
-    const member = await getMemberById(member_id)
+    const member = await getMemberById(member_id).then()
     return member ? setPrivate(member) : member
   }
 
   const getPublicMembers = async (offset: number, limit: number) => {
     const members = await prisma.findMany({
-      include: {
-        member_role: true,
-        member_status: true,
-      },
+      include: includeRole,
       skip: offset,
       take: limit,
     })
     members.forEach(member => {
-      setRoleAndStatus(member)
+      setRole(member)
       setPrivate(member)
     })
     return members
